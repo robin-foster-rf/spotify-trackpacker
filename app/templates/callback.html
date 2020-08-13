@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Logged in with Spotify</h1>
+    <p>
+        successfully logged in as user: <a href="{{ results.external_urls.spotify }}">
+            {{ results.display_name }}
+        </a>
+    </p>
+    {% if results %}
+    <p>
+        {{ results }}
+    </p>
+    {% endif %}
+{% endblock %}

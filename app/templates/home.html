@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Home</h1>
+
+        <p> 
+        Logged in as <a href="{{ session['user']['external_urls']['spotify'] }}">
+            {{ session['user']['display_name'] }}
+        </a>
+    </p>   
+
+    <p>
+        <a href="/generate">Create playlist</a>
+    </p>
+
+    {% with playlist = session.get('last_created_playlist') %}
+    {% if playlist %}
+    Last created:
+    <a href="{{ playlist['external_urls']['spotify'] }}">
+        {{ playlist['name'] }}
+    </a> 
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <p> 
+        playlist tracks:
+    </p>
+    <ul>
+        {% for message in messages %}
+        <li>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    {% endwith %}
+
+    {% endif %}
+    {% endwith %}
+
+{% endblock %}

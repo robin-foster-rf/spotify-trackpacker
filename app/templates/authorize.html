@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Log in with Spotify</h1>
+    {% if auth_url %}
+    <a href="{{ auth_url }}">
+        <button type="button">Log in</button>
+    </a>
+    {% endif %}
+    {% if results %}
+    <p>
+        {{ results }}
+    </p>
+    {% endif %}
+{% endblock %}
