@@ -1,1 +1,1 @@
-web: gunicorn app:knapsack
+web: gunicorn app:app
