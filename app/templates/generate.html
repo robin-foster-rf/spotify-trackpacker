@@ -3,11 +3,17 @@
 {% block content %}
     <h1>Create playlist</h1>
 
-    <form action="" method="post" novalidate>
+    <form action="" method="post">
         {{ form.hidden_tag() }}
         <p>
-            {{ form.duration.label }}
-            {{ form.duration() }}
+            {{ form.duration_h.label }} : 
+            {{ form.duration_m.label }} :
+            {{ form.duration_s.label }} 
+        </p>
+        <p>
+            {{ form.duration_h() }}
+            {{ form.duration_m() }}
+            {{ form.duration_s() }}
         </p>
         <p>
             {{ form.submit() }}

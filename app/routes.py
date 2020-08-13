@@ -9,26 +9,18 @@ from app.forms import AuthenticateSpotifyForm, CreatePlaylistForm
 def index():
     access_token = session.get('access_token')
     if access_token:
-        return redirect('/authorize')
-    else:
-        return render_template('index.html')
+        last_created = session.get('last_created_playlist')
+        return render_template('index.html', playlist=last_created)
+    return render_template('index.html')
 
 
-@app.route('/home')
-def home():
-    access_token = session.get('access_token')
-    last_created = session.get('last_created_playlist')
-    if access_token:
-        return render_template('home.html', playlist=last_created)
-    else:
-        return redirect('index.html')
+from uuid import uuid4
+from spotipy import Spotify
+from spotipy.oauth2 import SpotifyOAuth
 
-
-from spotipy import SpotifyOAuth, Spotify
 from config import SpotifyConfig
 from app.spotify import scope
-from uuid import uuid4
-
+from app.pack import solve, SolverException
 
 sp_oauth = SpotifyOAuth(
     client_id=SpotifyConfig.CLIENT_ID, 
@@ -86,27 +78,47 @@ def logout():
     return redirect('/index')
 
 
-from app.pack import solve
-
 @app.route('/generate', methods=['GET', 'POST'])
 def generate():
     form = CreatePlaylistForm()
     if form.validate_on_submit():
-        playlist_duration = request.form.get('duration', type=int)*1000
+        duration_h = request.form.get('duration_h', type=int) or 0
+        duration_m = request.form.get('duration_m', type=int) or 0
+        duration_s = request.form.get('duration_s', type=int) or 0
+        playlist_duration_s = duration_h*3600 + duration_m*60 + duration_s
+        playlist_duration_ms = playlist_duration_s*1000
+
         tracks = get_saved_tracks()
-        track_durations = [t[2] for t in tracks]
-        selected, _ = solve(playlist_duration, track_durations)
+        track_durations_ms = [t[2] for t in tracks]
+
+        try:
+            selected, _ = solve(playlist_duration_ms, track_durations_ms)
+        except SolverException:
+            flash('No solution possible for that duration. Try something else')
+            return render_template('generate.html', form=form)
+
+
         selected_tracks = [t for i, t in enumerate(tracks) if i in selected]
-        
+        selected_track_ids = [t[1] for t in selected_tracks]
+
         flash(selected_tracks)
 
+        creation_time = datetime.now()
+        duration_strings = [
+            f'{duration_h:2d}h' if duration_h>0 else '',
+            f'{duration_m:2d}m' if duration_m>0 else '', 
+            f'{duration_s:2d}s' if duration_s>0 else '',
+        ]
+        name = 'trackpack '+' '.join(duration_strings)
+        description = 'created at '+creation_time.strftime('%Y-%b-%d %H:%M:%S')
+
         playlist = create_playlist(
-            [t[1] for t in selected_tracks], 
-            'knapsack t={:d}s'.format(playlist_duration//1000), 
-            'created at '+datetime.now().strftime("%Y-%b-%d %H:%M:%S"), 
+            selected_track_ids,
+            name, 
+            description,
         )
         session['last_created_playlist'] = playlist
-        return redirect('/home')
+        return redirect(url_for('index'))
     return render_template('generate.html', form=form)
 
 

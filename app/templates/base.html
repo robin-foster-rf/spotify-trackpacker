@@ -1,12 +1,15 @@
 <html>
     <head>
-        <title>Spotify Knapsack</title>
+        <title>Spotify trackpacker</title>
     </head>
     <body>
-        <div>Knapsack: 
-            <a href="/home">Home</a>
+        <div> 
+            <a href="/index">Trackpacker</a>
+            {% if session.get('access_token') is none %}
             <a href="/authorize">Log in with Spotify</a>
+            {% else %}
             <a href="/logout">Log out</a>
+            {% endif %}
         </div>
         {% block content %}{% endblock %}
     </body>
