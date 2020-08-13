@@ -7,9 +7,5 @@
             {{ results.display_name }}
         </a>
     </p>
-    {% if results %}
-    <p>
-        {{ results }}
-    </p>
-    {% endif %}
+    <a href="{{ url_for('generate') }}" class="btn btn-primary">Create a playlist</a>
 {% endblock %}
