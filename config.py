@@ -1,8 +1,11 @@
 import os
 from dotenv import load_dotenv
 
+# if on development put environment variables in .env 
+# else if on production configure configure through heroku
 basedir = os.path.abspath(os.path.dirname(__file__))
-load_dotenv(os.path.join(basedir, '.env'))
+if os.path.exists(os.path.join(basedir, '.env')):
+    load_dotenv(os.path.join(basedir, '.env'))
 
 class FlaskConfig:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-wont-guess-this-haha'
