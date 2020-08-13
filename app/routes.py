@@ -9,6 +9,8 @@ from app.forms import AuthenticateSpotifyForm, CreatePlaylistForm
 def index():
     access_token = session.get('access_token')
     if access_token:
+        # todo: check if access token has expired
+        # will need to get another one if user has logged on elsewhere.
         last_created = session.get('last_created_playlist')
         return render_template('index.html', playlist=last_created)
     return render_template('index.html')
@@ -101,7 +103,8 @@ def generate():
         selected_tracks = [t for i, t in enumerate(tracks) if i in selected]
         selected_track_ids = [t[1] for t in selected_tracks]
 
-        flash(selected_tracks)
+        for t in selected_tracks:
+            flash(t)
 
         creation_time = datetime.now()
         duration_strings = [

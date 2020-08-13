@@ -1,16 +1,38 @@
-<html>
-    <head>
-        <title>Spotify trackpacker</title>
-    </head>
-    <body>
-        <div> 
-            <a href="/index">Trackpacker</a>
-            {% if session.get('access_token') is none %}
-            <a href="/authorize">Log in with Spotify</a>
-            {% else %}
-            <a href="/logout">Log out</a>
-            {% endif %}
+{% extends "bootstrap/base.html" %}
+
+{% block title %}
+    {% if title %}{{ title }}{% endif %}
+{% endblock %}
+
+{% block navbar %}
+    <nav class="navbar navbar-default">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="{{ url_for('index') }}">Trackpacker</a>
+            </div>
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav navbar-right">
+                    {% if session.get('access_token') is none %}
+                    <li><a href="{{ url_for('authorize') }}">Log in with Spotify</a></li>
+                    {% else %}
+                    <li><a href="{{ url_for('logout') }}">Log out</a></li>
+                    {% endif %}
+                </ul>
+            </div>
         </div>
-        {% block content %}{% endblock %}
-    </body>
-</html>
+        <hr>
+    </nav>
+{% endblock %}
+
+{% block content %}
+    <div class="container" id="app-content-container">
+    {% block app_content %}
+    {% endblock %}
+    </div>
+{% endblock %}

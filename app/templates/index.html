@@ -1,13 +1,11 @@
 {% extends "base.html" %}
 
-{% block content %}
+{% block app_content %}
     <h1>Home</h1>
     <p>Create a playlist with an exact length</p>
 
-
     {% if session.get('access_token') is none %}
-    <h1>Log in first</h1>
-
+    <a href="{{ url_for('authorize') }}" class="btn btn-primary">Log in with Spotify</a>
     {% else %}
     <p> 
     Logged in as <a href="{{ session['user']['external_urls']['spotify'] }}">
@@ -15,7 +13,7 @@
     </p>
 
     <p>
-        <a href="/generate">Create playlist</a>
+        <a href="{{ url_for('generate') }}">Create playlist</a>
     </p>
 
     {% with playlist = session.get('last_created_playlist') %}
