@@ -1,13 +1,13 @@
 """ 
-Implement solution to the knapsack problem
+Implement solution to the packing problem
 
 we have a set of tracks each with a certain duration and want to choose a subset
 of these such that the sum of the durations is close to our desired total 
 playlist length
 
-minimise |\Sum w_j x_j - W|
+minimise abs(Sum(w_j*x_j) - W)
 
-where W is total desired length, w_j is length of jth track, and x_j \in {0,1}
+where W is total desired length, w_j is length of jth track, and x_j in {0,1}
 is the indicator variable for whether jth track is included or not
 """
 
