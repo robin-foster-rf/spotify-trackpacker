@@ -3,8 +3,8 @@
 {% block app_content %}
     <h1>Logged in with Spotify</h1>
     <p>
-        successfully logged in as user: <a href="{{ results.external_urls.spotify }}">
-            {{ results.display_name }}
+        successfully logged in as user <a href="{{ user.external_urls.spotify }}">
+            {{ user.display_name }}
         </a>
     </p>
     <a href="{{ url_for('generate') }}" class="btn btn-primary">Create a playlist</a>

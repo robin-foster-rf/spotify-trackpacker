@@ -1,82 +1,67 @@
 from flask import render_template, flash, redirect, request, session, url_for
 from datetime import datetime
+from spotipy import Spotify
 
 from app import app
 from app.forms import AuthenticateSpotifyForm, CreatePlaylistForm
 
+from app.spotify import _sp_oauth, get_saved_tracks, create_playlist
+from app.pack import solve, SolverException
+
+
 @app.route('/')
 @app.route('/index')
 def index():
-    access_token = session.get('access_token')
-    if access_token:
-        # todo: check if access token has expired
-        # will need to get another one if user has logged on elsewhere.
-        last_created = session.get('last_created_playlist')
-        return render_template('index.html', playlist=last_created)
-    return render_template('index.html')
-
-
-from uuid import uuid4
-from spotipy import Spotify
-from spotipy.oauth2 import SpotifyOAuth
-
-from config import SpotifyConfig
-from app.spotify import scope
-from app.pack import solve, SolverException
-
-sp_oauth = SpotifyOAuth(
-    client_id=SpotifyConfig.CLIENT_ID, 
-    client_secret=SpotifyConfig.CLIENT_SECRET, 
-    redirect_uri=SpotifyConfig.REDIRECT_URI,
-    scope=scope,
-    username=uuid4()
-)
+    tokens = session.get('tokens')
+    if tokens:
+        sp_oauth = _sp_oauth()
+        if sp_oauth.is_token_expired(tokens):
+            tokens = sp_oauth.refresh_access_token(tokens['refresh_token'])
+            session['tokens'] = tokens
+        sp = Spotify(auth=tokens['access_token'])
+        user = sp.current_user()
+        session['current_user'] = user
+        playlist = session.get('last_created_playlist')
+        return render_template('index.html', 
+            user=user,
+            playlist=playlist,
+        ) 
+    else:
+        return render_template('index.html')
 
 
 @app.route('/authorize')
 def authorize():
-    access_token = ""
-
-    token_info = sp_oauth.get_cached_token()
-
-    if token_info:
-        access_token = token_info['access_token']
-    #else:
-    #    url = request.url
-    #    code = sp_oauth.parse_response_code(url)
-    #    if code:
-    #        token_info = sp_oauth.get_access_token(code)
-    #        access_token = token_info['access_token']
-    
-    if access_token:
-        return redirect('/callback'+'?'+access_token)
+    sp_oauth = _sp_oauth()
+    tokens = session.get('tokens')
+    if tokens:
+        if sp_oauth.is_token_expired(tokens):
+            tokens = sp_oauth.refresh_access_token(tokens['refresh_token'])
+            session['tokens'] = tokens
+        return redirect(url_for('callback', code=tokens['access_token']))
     else:
         auth_url = sp_oauth.get_authorize_url()
-        return render_template('authorize.html', 
-            auth_url=auth_url)
+        return render_template('authorize.html', auth_url=auth_url)    
 
 
 @app.route('/callback')
 def callback():
+    sp_oauth = _sp_oauth()
     url = request.url
     code = sp_oauth.parse_response_code(url)
-    if code:
-        token_info = sp_oauth.get_access_token(code)
-        access_token = token_info['access_token']
-
-    session['access_token'] = access_token
-
-    sp = Spotify(access_token)
-    results = sp.current_user()
-    session['user'] = results
-    return render_template('callback.html', 
-        results=results)
+    tokens = sp_oauth.get_access_token(code, as_dict=True, check_cache=False)
+    session['tokens'] = tokens
+    sp = Spotify(tokens['access_token'])
+    user = sp.current_user()
+    session['user'] = user
+    return render_template('callback.html', user=user)
 
 
 @app.route('/logout')
 def logout():
-    session.pop('user', None)
-    session.pop('access_token', None)
+    #session.pop('user', None)
+    #session.pop('access_token', None)
+    session.clear()
     return redirect('/index')
 
 
@@ -98,7 +83,6 @@ def generate():
         except SolverException:
             flash('No solution possible for that duration. Try something else')
             return render_template('generate.html', form=form)
-
 
         selected_tracks = [t for i, t in enumerate(tracks) if i in selected]
         selected_track_ids = [t[1] for t in selected_tracks]
@@ -123,43 +107,3 @@ def generate():
         session['last_created_playlist'] = playlist
         return redirect(url_for('index'))
     return render_template('generate.html', form=form)
-
-
-def get_saved_tracks():
-    sp = Spotify(session['access_token'])
-
-    offset = 0
-    limit = 50
-    total = limit
-    tracks = []
-    while offset<total:
-        r = sp.current_user_saved_tracks(limit=limit, offset=offset)
-        tracks += [
-            (t['track']['name'], t['track']['id'], t['track']['duration_ms']) 
-                for t in r['items'] 
-        ]
-        if total==limit:
-            total = r['total']
-        offset += limit
-        print(offset, total)
-    return tracks
-
-
-def create_playlist(track_ids, name, description=''):
-    sp = Spotify(session['access_token'])
-
-    r = sp.user_playlist_create(
-        session['user']['id'], 
-        name=name, 
-        public=True,
-        description=description
-    )
-    playlist = r
-
-    r = sp.user_playlist_add_tracks(
-        session['user']['id'], 
-        playlist_id=r['id'], 
-        tracks=track_ids,
-    )
-
-    return playlist
