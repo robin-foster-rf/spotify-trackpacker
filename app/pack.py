@@ -57,6 +57,12 @@ def print_solution(tracks, selected, error):
             print(t)
     print(error)
 
+# TODO: explore chebyshev form of this problem
+# minimizing abs value of difference of sum from target is apparently called the
+# chebyshev problem and can be reformulated as a convex optimisation problem. 
+# see section 1.6 of convex optimisation book 
+# http://stanford.edu/~boyd/cvxbook/bv_cvxbook.pdf
+
 # TODO: find pleasing order for playlist by key.
 # possible good transitions:
 #  - major to relative minor
