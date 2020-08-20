@@ -5,8 +5,10 @@ from spotipy import Spotify
 from app import app
 from app.forms import AuthenticateSpotifyForm, CreatePlaylistForm
 
-from app.spotify import _sp_oauth, get_saved_tracks, create_playlist
+from app.spotify import (_sp_oauth, get_saved_tracks, create_playlist,
+    get_track_art_url)
 from app.pack import solve, SolverException
+from app.art import create_cover
 
 
 @app.route('/')
@@ -57,7 +59,7 @@ def callback():
     return render_template('callback.html', user=user)
 
 
-@app.route('/logout')
+@app.route('/logout') 
 def logout():
     #session.pop('user', None)
     #session.pop('access_token', None)
@@ -76,7 +78,8 @@ def generate():
         playlist_duration_ms = playlist_duration_s*1000
 
         tracks = get_saved_tracks()
-        track_durations_ms = [t[2] for t in tracks]
+        track_names = [t['name'] for t in tracks]
+        track_durations_ms = [t['duration_ms'] for t in tracks]
 
         try:
             selected, _ = solve(playlist_duration_ms, track_durations_ms)
@@ -85,10 +88,10 @@ def generate():
             return render_template('generate.html', form=form)
 
         selected_tracks = [t for i, t in enumerate(tracks) if i in selected]
-        selected_track_ids = [t[1] for t in selected_tracks]
+        selected_track_ids = [t['id'] for t in selected_tracks]
 
-        for t in selected_tracks:
-            flash(t)
+        for i in selected:
+            flash(track_names[i])
 
         creation_time = datetime.now()
         duration_strings = [
@@ -96,7 +99,7 @@ def generate():
             f'{duration_m:2d}m' if duration_m>0 else '', 
             f'{duration_s:2d}s' if duration_s>0 else '',
         ]
-        name = 'trackpack '+' '.join(duration_strings)
+        name = 'trackpack '+' '.join(duration_strings).strip()
         description = 'created at '+creation_time.strftime('%Y-%b-%d %H:%M:%S')
 
         playlist = create_playlist(
@@ -105,5 +108,17 @@ def generate():
             description,
         )
         session['last_created_playlist'] = playlist
+
+        # create cover art from top 5 tracks in playlist
+        sp = Spotify(session['tokens']['access_token'])
+        cover_urls = [get_track_art_url(t) for t in selected_tracks[:5]]
+        img_b64 = create_cover(cover_urls)
+        sp.playlist_upload_cover_image(playlist['id'], img_b64)
+
         return redirect(url_for('index'))
     return render_template('generate.html', form=form)
+
+
+@app.route('/search', methods=['GET', 'POST'])
+def search():
+    pass

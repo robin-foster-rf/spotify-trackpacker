@@ -32,7 +32,8 @@ scope = ' '.join([
     'playlist-read-collaborative', 
     'playlist-modify-public', 
     'playlist-read-private', 
-    'playlist-modify-private', 
+    'playlist-modify-private',
+    'ugc-image-upload', 
 ])
 
 def _sp_oauth():
@@ -53,10 +54,7 @@ def get_saved_tracks():
     tracks = []
     while offset<total:
         r = sp.current_user_saved_tracks(limit=limit, offset=offset)
-        tracks += [
-            (t['track']['name'], t['track']['id'], t['track']['duration_ms']) 
-                for t in r['items'] 
-        ]
+        tracks += [t['track'] for t in r['items']]
         if total==limit:
             total = r['total']
         offset += limit
@@ -80,4 +78,33 @@ def create_playlist(track_ids, name, description=''):
         playlist_id=r['id'], 
         tracks=track_ids,
     )
+
     return playlist
+
+
+def get_track_art_url(track, res=300):
+    """
+    get url for track artwork with given resolution
+
+    params:
+        track : track dict object as returned by spotify api
+        res : image resolution in pixels (one of {640, 300, 64})
+    returns:
+        url : string
+    """
+    ims = track['album']['images']
+    url = ''
+    for im in ims:
+        if im['height'] == res:
+            url = im['url']
+    return url
+
+
+def get_genres():
+    sp = Spotify(session['tokens']['access_token'])
+    r = sp.recommendation_genre_seeds()
+    return r['genres']
+
+def search_artist(q):
+    pass
+

@@ -19,13 +19,16 @@ class SolverException(Exception):
 
 def solve(W, w):
     """
+    Solve the packing problem: choose subset of w which sums closest to W.
 
-    inputs:
+    parameters:
         W : target sum
         w : list of weights of each item
     returns:
         list of indices of items in w chosen
         solution error (solution total weight minus target)
+    raises:
+        SolverException if optimiser has not found optimal solution
     """
     I = range(len(w))
     m = Model('targetsum')
@@ -53,3 +56,31 @@ def print_solution(tracks, selected, error):
         if i in selected:
             print(t)
     print(error)
+
+# TODO: find pleasing order for playlist by key.
+# possible good transitions:
+#  - major to relative minor
+#  - minor to relative major
+#  - up 5th
+#  - down 5th
+# If we start with a given list of tracks with no constraints on which keys they
+# have then it won't be possible in general to solve an optimum order satisfying
+# all these transition constraints, but it should be possible to come up with a 
+# decent solution. 
+
+cycle_5 = [i*7%12 for i in range(12)]
+pitches = dict(
+    zip(range(12),
+    ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'])
+)
+
+def solve_key_order(keys):
+    """
+    Solve the track ordering problem: find order with pleasing key transitions
+
+    arguments:
+        keys : list of keys of tracks to reorder int integer pitch notation
+    returns:
+        list of indices in optimal order 
+    """
+    pass
