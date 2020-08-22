@@ -1,4 +1,4 @@
-from flask import render_template, flash, redirect, request, session, url_for
+from flask import render_template, flash, redirect, request, session, url_for, jsonify
 from datetime import datetime
 from spotipy import Spotify
 
@@ -121,4 +121,12 @@ def generate():
 
 @app.route('/search', methods=['GET', 'POST'])
 def search():
-    pass
+    sp = Spotify(session['tokens']['access_token'])
+    q = request.args.get('q')
+    r = sp.search(q, limit=15, type='track')
+    return jsonify(r)
+
+
+@app.route('/search_page', methods=['GET', 'POST'])
+def search_page():
+    return render_template('search_page.html')

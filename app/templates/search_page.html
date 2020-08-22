@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+
+<h1>Search page</h1>
+
+<form id="search_form">
+    <input type="text" id="search_text_input" onkeydown="showResults(this.value)">
+</form>
+
+<ul id="search_results">
+</ul>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // search_text on edit send request to /search with contents of text box 
+    // and then put results in the search_results <ul>
+
+    function showResults(str) {
+        if (str=='') {return;}
+        var xhttp = new XMLHttpRequest();
+        var resultList = document.getElementById('search_results');
+        xhttp.onreadystatechange = function () {
+            while (resultList.firstChild) {
+                resultList.removeChild(resultList.lastChild);
+            }
+            if (this.readyState == 4 && this.status == 200) {
+                var r = JSON.parse(this.responseText);
+                for (i in r.tracks.items) {
+                    var newElement = document.createElement('li');
+                    newElement.innerHTML = r.tracks.items[i].name;
+                    resultList.appendChild(newElement);
+                }
+            }   
+        };
+        xhttp.open('GET', 'search?q='+str, true);
+        xhttp.send();
+    }
+</script>
+{% endblock %}

@@ -9,6 +9,7 @@ if os.path.exists(os.path.join(basedir, '.env')):
 
 class FlaskConfig:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-wont-guess-this-haha'
+    TEMPLATES_AUTO_RELOAD = True
 
 class SpotifyConfig:
     CLIENT_ID = os.environ.get('SPOTIFY_CLIENT_ID')
