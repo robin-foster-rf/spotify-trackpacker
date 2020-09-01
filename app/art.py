@@ -10,6 +10,7 @@ from math import sqrt
 from io import BytesIO
 from base64 import b64encode
 from PIL import Image, ImageDraw, ImageFilter
+from PIL.ImageOps import invert
 
 SPOTIFY_GREEN  = ( 30, 215,  96) 
 INVERT_MAGENTA = (255,  40, 159) 
@@ -77,6 +78,7 @@ def stamp_logo(image):
 
     block_colour = Image.new('RGB', image.size, INVERT_MAGENTA)
     imc = Image.composite(block_colour, image, mask)
+    #imc = Image.composite(invert(image), image, mask)
     return imc
 
 

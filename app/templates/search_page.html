@@ -1,36 +1,70 @@
 {% extends "base.html" %}
+{% block head %}
+{{super()}}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" rel="stylesheet" />
+{% endblock %}
+
 
 {% block app_content %}
 
 <h1>Search page</h1>
 
+<h2>search box with result dropdown</h2>
 <form id="search_form">
-    <input type="text" id="search_text_input" onkeydown="showResults(this.value)">
+    <input type="text" id="search_text_input1" onkeyup="showResults1(this.value)">
+</form>
+<select id="search_results_dropdown" style="width: 500px">
+</select>
+
+<h2>search box with results datalist</h2>
+<form>
+    <label for="seed_track">Choose a seed track</label>
+    <input list="tracks" name="seed_track" id="seed_track" onkeyup="showResults2(this.value)">
+    <datalist id="tracks"></datalist>
 </form>
 
-<ul id="search_results">
-</ul>
+<h2>search box with only top result</h2>
+<input type="text" id="search_text_input3" onkeyup="showResults3(this.value)">
+<div id="top_result"></div>
+
+<h2>select2 jquery</h2>
+<select class="form-control" multiple="multiple">
+</select>
+
 
 {% endblock %}
 
 {% block scripts %}
+{{super()}}
 <script>
     // search_text on edit send request to /search with contents of text box 
     // and then put results in the search_results <ul>
+    var current_input = '';
 
-    function showResults(str) {
-        if (str=='') {return;}
+    function showResults1(str) {
+        var resultList = document.getElementById('search_results_dropdown');
+        // if empty input clear options
+        if (str=='') { 
+            while (resultList.firstChild) {
+                resultList.removeChild(resultList.lastChild);
+            }
+            return; 
+        }
+        // if no change don't update (i.e. keypresses that don't change query
+        // don't trigger another search)
+        if (str==current_input) {return;}
+        //  
         var xhttp = new XMLHttpRequest();
-        var resultList = document.getElementById('search_results');
-        xhttp.onreadystatechange = function () {
+        xhttp.onreadystatechange = function () {  
             while (resultList.firstChild) {
                 resultList.removeChild(resultList.lastChild);
             }
             if (this.readyState == 4 && this.status == 200) {
                 var r = JSON.parse(this.responseText);
                 for (i in r.tracks.items) {
-                    var newElement = document.createElement('li');
-                    newElement.innerHTML = r.tracks.items[i].name;
+                    var newElement = document.createElement('option');
+                    newElement.innerHTML = r.tracks.items[i].name+', '+r.tracks.items[i].artists[0].name;
+                    newElement.id = r.tracks.items[i].id;
                     resultList.appendChild(newElement);
                 }
             }   
@@ -38,5 +72,96 @@
         xhttp.open('GET', 'search?q='+str, true);
         xhttp.send();
     }
+
+    function showResults2(str) {
+        var resultList = document.getElementById('tracks');
+        // if empty input clear options
+        if (str=='') { 
+            while (resultList.firstChild) {
+                resultList.removeChild(resultList.lastChild);
+            }
+            return; 
+        }
+        // if no change don't update (i.e. keypresses that don't change query
+        // don't trigger another search)
+        if (str==current_input) {return;}
+        //  
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {  
+            while (resultList.firstChild) {
+                resultList.removeChild(resultList.lastChild);
+            }
+            if (this.readyState == 4 && this.status == 200) {
+                var r = JSON.parse(this.responseText);
+                for (i in r.tracks.items) {
+                    var newElement = document.createElement('option');
+                    newElement.innerHTML = r.tracks.items[i].name+', '+r.tracks.items[i].artists[0].name;
+                    newElement.id = r.tracks.items[i].id;
+                    resultList.appendChild(newElement);
+                }
+            }   
+        };
+        xhttp.open('GET', 'search?q='+str, true);
+        xhttp.send();
+    }
+
+    function showResults3(str) {
+        var resultList = document.getElementById('top_result');
+        // if empty input clear options
+        if (str=='') { 
+            while (resultList.firstChild) {
+                resultList.removeChild(resultList.lastChild);
+            }
+            return; 
+        }
+        // if no change don't update (i.e. keypresses that don't change query
+        // don't trigger another search)
+        if (str==current_input) {return;}
+        //  
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {  
+            while (resultList.firstChild) {
+                resultList.removeChild(resultList.lastChild);
+            }
+            if (this.readyState == 4 && this.status == 200) {
+                var r = JSON.parse(this.responseText);
+                var newElement = document.createElement('p');
+                newElement.innerHTML = r.tracks.items[0].name+', '+r.tracks.items[0].artists[0].name;
+                resultList.appendChild(newElement);
+            }
+        };
+        xhttp.open('GET', 'search?q='+str, true);
+        xhttp.send();
+    }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/js/select2.min.js"></script>
+<script>
+    $(".form-control").select2({
+        tags: true,
+        maximumSelectionLength: 5,
+        ajax: {
+            url: '/search',
+            data: function (params) {
+                var query = {
+                    q: params.term
+                }
+                return query;
+            },
+            dataType: 'json',
+            delay: 250,
+            processResults: function (data) {
+                return {
+                    results: $.map(data.tracks.items, function (item) {
+                        return {
+                            text: item.name+', '+item.artists[0].name, 
+                            id: item.id
+                        }
+                    })
+                }
+            }
+        },
+        placeholder: 'Search for a track', 
+        minimumInputLength: 1
+    });
 </script>
 {% endblock %}

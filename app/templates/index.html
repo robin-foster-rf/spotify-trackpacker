@@ -8,34 +8,22 @@
     {% if user is none %}
         <a href="{{ url_for('authorize') }}" class="btn btn-primary">Log in with Spotify</a>
     {% else %}
-        <p> 
-        Logged in as <a href="{{ user.external_urls.spotify }}">
-            {{ user.display_name }}</a>
-        </p>
-
-        <p>
-            <a href="{{ url_for('generate') }}">Create playlist</a>
-        </p>
-
+        <a href="{{ url_for('generate') }}" class="btn btn-primary">Create playlist</a>
+        <p></p>
         {% if playlist %}
             Last created:
             <a href="{{ playlist['external_urls']['spotify'] }}">
                 {{ playlist['name'] }}
-            </a> 
-
-            {% with messages = get_flashed_messages() %}
-                {% if messages %}
-                <p>playlist tracks:</p>
-                <ul>
-                    {% for message in messages %}
-                    <li>{{ message }}</li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
-            {% endwith %}
-
+            </a> (click to listen on Spotify)
+        {% endif %}
+        {% if playlist_tracks %}
+        <p>Songs included:</p>
+        <ul>
+            {% for t in playlist_tracks %}
+            <li>{{ t }}</li>
+            {% endfor %}
+        </ul>
         {% endif %}
     {% endif %}
     {% endwith %}
 {% endblock %}
-

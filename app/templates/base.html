@@ -1,5 +1,7 @@
 {% extends "bootstrap/base.html" %}
 
+{% block html_attribs %} lang="en" {% endblock %}
+
 {% block title %}
     {% if title %}{{ title }}{% endif %}
 {% endblock %}
@@ -8,7 +10,7 @@
     <nav class="navbar navbar-default">
         <!-- <div class="container"> -->
             <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse-1" aria-expanded="false">
+                <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#navbar-collapse-1" aria-expanded="false">
                     <span class="sr-only">Toggle navigation</span>
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
@@ -16,7 +18,7 @@
                 </button>
                 <a class="navbar-brand" href="{{ url_for('index') }}">Trackpacker</a>
             </div>
-            <div class="collapse navbar-collapse" id="navbar-collapse-1">
+            <div class="navbar-collapse collapse" id="navbar-collapse-1">
                 <ul class="nav navbar-nav navbar-right">
                     {% if session.get('tokens') is none %}
                     <li><a href="{{ url_for('authorize') }}">Log in with Spotify</a></li>
@@ -43,10 +45,22 @@
 
 {% block content %}
     <div class="container" id="app-content-container">
-    {% block app_content %}
+    
+    {% block messages %}
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert {{ message.alert_type }}" role="alert">
+            {{ message.content }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
     {% endblock %}
-    </div>
-{% endblock %}
 
-{% block scripts %}
+    {% block app_content %}{% endblock %}
+    </div>
 {% endblock %}

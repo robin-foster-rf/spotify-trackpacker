@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+{% block head %}
+{{super()}}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" rel="stylesheet" />
+{% endblock %}
+
+{% block app_content %}
+    <h1>Create playlist</h1>
+
+    <form name="generate_form" action="" method="post">
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.duration_h.label }} : 
+            {{ form.duration_m.label }} :
+            {{ form.duration_s.label }} 
+        </p>
+        <p>
+            {{ form.duration_h(style="width:4em;") }} :
+            {{ form.duration_m(style="width:4em;") }} :
+            {{ form.duration_s(style="width:4em;") }}
+        </p>
+        {{ seed_type[0].label }} {# user library #}
+        {{ seed_type[0] }}<p></p>
+
+        {{ seed_type[1].label }} {# genre #}
+        {{ seed_type[1] }}<p></p>
+
+        {{ form.genre.label() }}<p></p>
+        {{ form.genre(class="form-control-genre", multiple="multiple", style="width: 100%") }}<p></p>
+        {% for error in form.genre.errors %}
+            <p><span class="text-danger">{{ error }}</span></p>
+        {% endfor %}
+
+        {{ seed_type[2].label }} {# artist #}
+        {{ seed_type[2] }}<p></p>
+
+        {{ form.seed_artist.label() }}<p></p>
+        {{ form.seed_artist(class="form-control-seed-artist", multiple="multiple", style="width: 100%") }}<p></p>
+        {% for error in form.seed_artist.errors %}
+            <p><span class="text-danger">{{ error }}</span></p>
+        {% endfor %}
+
+        {{ seed_type[3].label }} {# tracks #}
+        {{ seed_type[3] }}<p></p>
+
+        {{ form.seed_tracks.label() }}<p></p>
+        {{ form.seed_tracks(class="form-control-seed-tracks", multiple="multiple", style="width: 100%") }}<p></p>
+        {% for error in form.seed_tracks.errors %}
+            <p><span class="text-danger">{{ error }}</span></p>
+        {% endfor %}
+        <p></p>
+        <p>
+        {{ form.submit() }}
+        </p>
+    </form>
+{% endblock %}
+
+{% block scripts %}
+{{super()}}
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/js/select2.min.js"></script>
+<script>
+    var radio = document.generate_form.seed_type;
+    var currentRadioValue = '';
+    for (i in radio) {
+        radio[i].onclick = handleRadioClick;
+        if (radio[i].checked == true) {
+            currentRadioValue = radio[i].value;
+        }
+    }
+    var radioValues = {
+        1: radio[1].value,
+        2: radio[2].value,
+        3: radio[3].value,
+    };
+    var radioDependentInputs = {
+        1:'form-control-genre', 
+        2:'form-control-seed-artist', 
+        3:'form-control-seed-tracks'
+    };
+    // initialize inputs disabled since default option is fetch form user library
+    for (i in radioDependentInputs) {
+        $('.'+radioDependentInputs[i]).prop("disabled", true);
+    }
+    // when radio button option is changed grey out all options except one selected
+    function handleRadioClick() {
+        currentRadioValue = this.value;
+        for (i in radioDependentInputs) {
+            if (currentRadioValue==radioValues[i]) {
+                $('.'+radioDependentInputs[i]).prop("disabled", false);
+            } else {
+                $('.'+radioDependentInputs[i]).prop("disabled", true);
+            }
+        }
+    };
+    // select2 initialisation for search boxes
+    $(document).ready(function() {
+        $(".form-control-genre").select2({
+            maximumSelectionLength: 5, 
+            placeholder: 'Search for a genre',
+        })
+        for (i in radioDependentInputs) {
+            if (currentRadioValue==radioValues[i]) {
+                $('.'+radioDependentInputs[i]).prop("disabled", false);
+            } else {
+                $('.'+radioDependentInputs[i]).prop("disabled", true);
+            }
+        }
+    });
+    $(".form-control-seed-artist").select2({
+        maximumSelectionLength: 5,
+        placeholder: 'Search for an artist', 
+        minimumInputLength: 1,
+        ajax: {
+            url: '/search',
+            data: function (params) {
+                var query = {
+                    q: params.term,
+                    type: 'artist',
+                }
+                return query;
+            },
+            dataType: 'json',
+            delay: 100,
+            processResults: function (data) {
+                return {
+                    results: data.artists.items.map( function (item) {
+                        return {
+                            text: item.name, 
+                            id: item.id
+                        }
+                    })
+                }
+            }
+        },
+    });
+    $(".form-control-seed-tracks").select2({
+        maximumSelectionLength: 5,
+        placeholder: 'Search for a track', 
+        minimumInputLength: 1,
+        ajax: {
+            url: '/search',
+            data: function (params) {
+                var query = {
+                    q: params.term,
+                    type: 'track',
+                }
+                return query;
+            },
+            dataType: 'json',
+            delay: 100,
+            processResults: function (data) {
+                return {
+                    results: data.tracks.items.map( function (item) {
+                        return {
+                            text: item.name+', '+item.artists[0].name, 
+                            id: item.id
+                        }
+                    })
+                }
+            }
+        },
+    });
+</script>
+{% endblock %}
